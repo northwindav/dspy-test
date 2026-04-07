@@ -1,0 +1,40 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Build / packaging artifacts
+build/
+dist/
+*.egg-info/
+
+# Virtual environments / local Python env folders
+.venv/
+venv/
+env/
+ENV/
+
+# Conda and local config files
+.conda/
+.python-version
+
+# IDE / editor settings
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local notes / scratch files
+notes/
