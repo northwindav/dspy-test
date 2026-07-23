@@ -54,6 +54,27 @@ Then rerun:
 python examples/hello_dspy.py --term "program synthesis"
 ```
 
+## 5) Run the sounding classification smoke test
+
+The first implementation slice is a text-only inversion classifier for the lowest 150 mb of a sounding. It uses placeholder examples now and is intended to be replaced with your labeled soundings.
+
+```powershell
+python examples/inversion_smoke_test.py --optimizer all
+```
+
+Current tracked placeholders live in `examples/inversion_dataset.json` and use four labels:
+
+- `none`
+- `weak`
+- `moderate`
+- `strong`
+
+Near-term workflow:
+
+- Replace the placeholder sounding texts with your real text-only soundings.
+- Keep labels mutually exclusive for this first task.
+- Compare baseline, `LabeledFewShot`, and `BootstrapFewShot` before trying heavier optimizers.
+
 ## Troubleshooting
 
 - Azure errors about model/deployment:

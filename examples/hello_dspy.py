@@ -1,6 +1,10 @@
 import argparse
+import sys
+from pathlib import Path
 
 import dspy
+
+sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from src.config import configure_dspy
 
