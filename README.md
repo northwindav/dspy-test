@@ -1,22 +1,29 @@
-# Minimal DSPy Starter (Ollama first, Azure second)
+# Minimal DSPy Starter (Azure-only)
 
-This project gives you a minimal DSPy setup for tutorials and examples.
+This project gives you a minimal DSPy setup for Azure-backed experiments and for the future fire-weather sounding workflow.
 
-## 1) Use your existing conda environment (PowerShell)
+## 1) Install a supported Python version
+
+Use a standard CPython installation from python.org, not a Conda-managed interpreter.
+This project is currently validated for Python 3.11 or 3.12. The current DSPy dependency stack does not install cleanly on Python 3.13 in this workspace.
+If `python` still resolves to Conda on your machine, invoke the CPython 3.12 executable explicitly when creating the environment.
+
+## 2) Create a native virtual environment (PowerShell)
 
 ```powershell
-conda activate dspy
+$env:LocalAppData\Programs\Python\Python312\python.exe -m venv .venv
+.\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-If needed, install dependencies directly into the env without activating it:
+If PowerShell blocks activation, allow local scripts for the current user and retry:
 
 ```powershell
-conda run -n dspy pip install -r requirements.txt
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 ```
 
-## 2) Configure environment variables
+## 3) Configure environment variables
 
 Copy the template and edit values:
 
@@ -24,29 +31,22 @@ Copy the template and edit values:
 Copy-Item .env.example .env
 ```
 
-## 3) Fast path: run locally with Ollama
+## 4) Run the DSPy smoke example
 
-Install Ollama, then pull/start a model:
-
-```powershell
-ollama pull llama3.2:3b
-```
-
-Run the DSPy smoke example:
+Run the Azure-backed smoke example:
 
 ```powershell
 python examples/hello_dspy.py --term "few-shot learning"
 ```
 
-## 4) Switch to Azure OpenAI
-
 Edit `.env`:
 
-- Set `DSPY_PROVIDER=azure`
 - Set `AZURE_OPENAI_API_KEY`
 - Set `AZURE_OPENAI_ENDPOINT`
 - Set `AZURE_OPENAI_DEPLOYMENT` to your deployment name
 - Keep/update `AZURE_OPENAI_API_VERSION`
+
+This repo is intentionally Azure-only so the setup matches the larger sounding-interpretation project.
 
 Then rerun:
 
@@ -56,13 +56,11 @@ python examples/hello_dspy.py --term "program synthesis"
 
 ## Troubleshooting
 
-- `Connection error` with Ollama:
-  - Ensure Ollama is installed and running locally.
-  - Confirm `DSPY_OLLAMA_API_BASE=http://localhost:11434`.
 - Azure errors about model/deployment:
   - `AZURE_OPENAI_DEPLOYMENT` must be your Azure deployment name, not model family text.
 - Azure auth or endpoint issues:
   - Verify endpoint shape: `https://<resource>.openai.azure.com`.
   - Verify API version supported by your deployment.
 - DSPy import issues:
-  - Confirm the `dspy` conda environment is active and packages were installed there.
+  - Confirm the `.venv` environment is active and packages were installed there.
+  - Confirm `python --version` reports Python 3.11 or 3.12.

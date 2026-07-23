@@ -21,7 +21,7 @@ def main() -> None:
     program = dspy.Predict(ExplainTerm)
     result = program(term=args.term)
 
-    print(f"Provider: {settings.provider}")
+    print(f"Azure deployment: {settings.azure_deployment}")
     print(f"Input: {args.term}")
     print("Output:")
     print(result.explanation)

@@ -24,8 +24,7 @@ venv/
 env/
 ENV/
 
-# Conda and local config files
-.conda/
+# Local Python version files
 .python-version
 
 # IDE / editor settings
