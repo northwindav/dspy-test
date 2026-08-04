@@ -24,7 +24,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Minimal inversion classification smoke test")
     parser.add_argument(
         "--dataset",
-        default="examples/inversion_dataset.json",
+        required=True,
         help="Path to the labeled text-only sounding dataset",
     )
     parser.add_argument(
@@ -43,6 +43,11 @@ def main() -> None:
 
     settings = configure_dspy()
     dataset_path = Path(args.dataset)
+    if not dataset_path.exists():
+        raise FileNotFoundError(
+            f"Dataset not found: {dataset_path}. Create a labeled JSON dataset first, then rerun the smoke test."
+        )
+
     examples = load_examples(dataset_path)
     train_examples, dev_examples = split_examples(examples, train_size=args.train_size)
     trainset = to_dspy_examples(train_examples)

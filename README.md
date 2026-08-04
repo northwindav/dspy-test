@@ -1,6 +1,6 @@
-# Minimal DSPy Starter (Azure-only)
+# DSPy Sounding Classifier (Azure-only)
 
-This project gives you a minimal DSPy setup for Azure-backed experiments and for the future fire-weather sounding workflow.
+This project is an Azure-only DSPy workspace for text-based upper-air sounding classification, starting with inversion-strength classification in the lowest 150 mb.
 
 ## 1) Install a supported Python version
 
@@ -31,14 +31,6 @@ Copy the template and edit values:
 Copy-Item .env.example .env
 ```
 
-## 4) Run the DSPy smoke example
-
-Run the Azure-backed smoke example:
-
-```powershell
-python examples/hello_dspy.py --term "few-shot learning"
-```
-
 Edit `.env`:
 
 - Set `AZURE_OPENAI_API_KEY`
@@ -48,35 +40,59 @@ Edit `.env`:
 
 This repo is intentionally Azure-only so the setup matches the larger sounding-interpretation project.
 
-Then rerun:
+## 4) Build a labeled inversion dataset
 
-```powershell
-python examples/hello_dspy.py --term "program synthesis"
-```
+Use the converter in `src/inversion_converter.py` to turn raw sounding rows into one JSON case per valid time, then label those cases using `examples/inversion_labeling_guide.md`.
+
+Each labeled dataset example should include at minimum:
+
+- `source`
+- `label`
+- `sounding_text`
+
+The converter also emits useful optional fields such as:
+
+- `case_name`
+- `station`
+- `validUTC`
+- `levels`
+- `top_pressure_mb`
+
+For the current inversion task, a `top_pressure_mb=850.0` cutoff is a reasonable first pass because it keeps the low-level profile while excluding higher-level rows.
 
 ## 5) Run the sounding classification smoke test
 
-The first implementation slice is a text-only inversion classifier for the lowest 150 mb of a sounding. It uses placeholder examples now and is intended to be replaced with your labeled soundings.
+Once you have a labeled JSON dataset, run:
 
 ```powershell
-python examples/inversion_smoke_test.py --optimizer all
+python examples/inversion_smoke_test.py --dataset path\to\your_labeled_dataset.json --optimizer all
 ```
 
-Current tracked placeholders live in `examples/inversion_dataset.json` and use four labels:
+Current supported labels are:
 
 - `none`
 - `weak`
 - `moderate`
 - `strong`
 
-Near-term workflow:
+Recommended workflow:
 
-- Replace the placeholder sounding texts with your real text-only soundings.
+- Convert raw sounding files into case records.
+- Apply labels using the inversion guide.
 - Keep labels mutually exclusive for this first task.
 - Compare baseline, `LabeledFewShot`, and `BootstrapFewShot` before trying heavier optimizers.
 
+## 6) Current project scope
+
+- First task: inversion strength in the lowest 150 mb.
+- Input: text-only soundings with user-supplied gold labels.
+- Optimization sequence: baseline, `LabeledFewShot`, `BootstrapFewShot`, then only heavier prompt optimizers if needed.
+- Deferred: multi-phenomenon classification, time-series reasoning, MCP, and fine-tuning.
+
 ## Troubleshooting
 
+- Missing dataset file:
+  - `examples/inversion_smoke_test.py` now requires an explicit `--dataset` path.
 - Azure errors about model/deployment:
   - `AZURE_OPENAI_DEPLOYMENT` must be your Azure deployment name, not model family text.
 - Azure auth or endpoint issues:
