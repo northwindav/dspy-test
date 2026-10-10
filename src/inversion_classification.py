@@ -1,18 +1,20 @@
 import json
+import random
 from dataclasses import dataclass
 from pathlib import Path
 from statistics import mean
 
 import dspy
 
+dspy.configure(provide_traceback=True)
 
 INVERSION_LABELS = ("none", "weak", "moderate", "strong")
 
 
 class ClassifyInversionStrength(dspy.Signature):
-    """Classify inversion strength in the lowest 150 mb of a sounding."""
+    """Determine presence of an inversion in the lower atmopshere and classify its strength based on a combination of magnitude and depth."""
 
-    sounding_text: str = dspy.InputField(desc="Text-only sounding description")
+    sounding_text: str = dspy.InputField(desc="Text-only vertical profile (sounding) data.")
     label: str = dspy.OutputField(desc="One of: none, weak, moderate, strong")
 
 
@@ -23,11 +25,14 @@ class DatasetExample:
     source: str
 
 
-def load_examples(dataset_path: Path) -> list[DatasetExample]:
+def load_examples(dataset_path: Path, profile_type: str = "stability") -> list[DatasetExample]:
     raw_examples = json.loads(dataset_path.read_text(encoding="utf-8"))
     examples: list[DatasetExample] = []
 
     for index, raw_example in enumerate(raw_examples, start=1):
+        if raw_example.get("profile_type", profile_type) != profile_type:
+            continue
+
         label = raw_example["label"].strip().lower()
         if label not in INVERSION_LABELS:
             raise ValueError(
@@ -61,6 +66,43 @@ def split_examples(examples: list[DatasetExample], train_size: int) -> tuple[lis
         raise ValueError("train_size must be greater than 0 and smaller than the dataset size")
 
     return examples[:train_size], examples[train_size:]
+
+
+def stratified_split_examples(
+    examples: list[DatasetExample],
+    train_size: int,
+    seed: int = 0,
+) -> tuple[list[DatasetExample], list[DatasetExample]]:
+    if train_size <= 0 or train_size >= len(examples):
+        raise ValueError("train_size must be greater than 0 and smaller than the dataset size")
+
+    grouped: dict[str, list[DatasetExample]] = {}
+    for example in examples:
+        grouped.setdefault(example.label, []).append(example)
+
+    if train_size < len(grouped):
+        raise ValueError(
+            f"train_size={train_size} is too small for stratified splitting across {len(grouped)} labels"
+        )
+
+    rng = random.Random(seed)
+    train_examples: list[DatasetExample] = []
+    remaining_examples: list[DatasetExample] = []
+
+    for label_group in grouped.values():
+        shuffled = label_group[:]
+        rng.shuffle(shuffled)
+        train_examples.append(shuffled[0])
+        remaining_examples.extend(shuffled[1:])
+
+    extra_needed = train_size - len(train_examples)
+    rng.shuffle(remaining_examples)
+    train_examples.extend(remaining_examples[:extra_needed])
+    dev_examples = remaining_examples[extra_needed:]
+
+    rng.shuffle(train_examples)
+    rng.shuffle(dev_examples)
+    return train_examples, dev_examples
 
 
 def label_exact_match(example: dspy.Example, prediction: dspy.Prediction, trace=None) -> bool:

@@ -1,0 +1,5 @@
+class ClassifyInversionStrength(dspy.Signature):
+    """Determine presence of an inversion in the lower atmopshere and classify its strength based on a combination of magnitude and depth."""
+
+    sounding_text: str = dspy.InputField(desc="Text-only vertical profile (sounding) data.")
+    label: str = dspy.OutputField(desc="One of: none, weak, moderate, strong")

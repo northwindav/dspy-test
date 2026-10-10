@@ -26,7 +26,7 @@ def load_settings() -> Settings:
     load_dotenv()
 
     return Settings(
-        temperature=float(os.getenv("DSPY_TEMPERATURE", "0.2")),
+        temperature=float(os.getenv("DSPY_TEMPERATURE", "0.0")),
         max_tokens=int(os.getenv("DSPY_MAX_TOKENS", "300")),
         azure_api_key=os.getenv("AZURE_OPENAI_API_KEY", "").strip(),
         azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", "").strip(),
